@@ -1,0 +1,4 @@
+repository "Wr Adventure@wrderly@cloud.cn"
+  path "/"
+    br "/main"
+    co "/main"
