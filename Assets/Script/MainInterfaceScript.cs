@@ -26,11 +26,13 @@ public class MainInterfaceScript : MonoBehaviour
     void StartGame()
     {
         CutImage.GetComponent<CutScript>().CutFadeIn();
+        Debug.Log("Start Game 1");
         StartCoroutine(WaitForCut(1f));
     }
 
     private IEnumerator WaitForCut(float time)
     {
+        Debug.Log("Start Game 2");
         yield return new WaitForSeconds(time);
         isStartGame = true;
     }

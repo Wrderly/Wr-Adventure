@@ -10,7 +10,7 @@ namespace Cainos.PixelArtTopDown_Basic
     {
         public string layer;
         public string sortingLayer;
-
+        /*
         private void OnTriggerExit2D(Collider2D other)
         {
             //这是一个私有的方法，
@@ -23,6 +23,46 @@ namespace Cainos.PixelArtTopDown_Basic
             foreach ( SpriteRenderer sr in srs)
             {
                 sr.sortingLayerName = sortingLayer;
+            }
+        }
+        */
+        private void OnTriggerExit2D(Collider2D other)
+        {
+            if (other == null) return;
+
+            other.gameObject.layer = LayerMask.NameToLayer(layer);
+
+            SpriteRenderer sr = other.gameObject.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.sortingLayerName = sortingLayer;
+            }
+
+
+            /*
+            SpriteRenderer[] srs = other.gameObject.GetComponentsInChildren<SpriteRenderer>();
+            foreach (SpriteRenderer childSr in srs)
+            {
+                if (childSr != null)
+                {
+                    childSr.sortingLayerName = sortingLayer;
+                }
+            }
+            */
+
+            Transform[] children = other.gameObject.GetComponentsInChildren<Transform>();
+            foreach (Transform child in children)
+            {
+                if (child != null)
+                {
+                    child.gameObject.layer = LayerMask.NameToLayer(layer);
+
+                    SpriteRenderer childSr = child.gameObject.GetComponent<SpriteRenderer>();
+                    if (childSr != null)
+                    {
+                        childSr.sortingLayerName = sortingLayer;
+                    }
+                }
             }
         }
 

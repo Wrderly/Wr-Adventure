@@ -5,6 +5,10 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 //本脚本用于角色控制
+public enum AttackType
+{
+    NoAttack, Attack1, Attack2, DashAttack
+}
 
 [Serializable]
 public class MyCharacterParameter
@@ -14,6 +18,9 @@ public class MyCharacterParameter
     public float atk;
     public float def;
     public bool isDead = false;
+    public AttackType attackType = AttackType.NoAttack;
+    public float[] atkRate = { 0f, 1f, 0.75f, 2f };
+    
 }
 
 public class MyCharacterController : MonoBehaviour,IEnemy
@@ -285,7 +292,7 @@ public class MyCharacterController : MonoBehaviour,IEnemy
                 canRun = true;
                 isDash = false;
                 animator.SetBool(HashACPdoDashAttack, true);
-                
+                parameter.attackType = AttackType.DashAttack;
                 StartCoroutine(EndDashAttack());
                 return;
             }
@@ -296,12 +303,14 @@ public class MyCharacterController : MonoBehaviour,IEnemy
                 numAttack = 1;
                 animator.SetBool(HashACPdoAttack1, true);
                 animator.SetBool(HashACPdoAttackTrans1Judge, false);
+                parameter.attackType = AttackType.Attack1;
                 StartCoroutine(EndAttack1());
             }
             else if (numAttack == 1)
             {
                 numAttack = 0;
                 animator.SetBool(HashACPdoAttack2, true);
+                parameter.attackType = AttackType.Attack2;
                 StartCoroutine(EndAttack2());
             }
         }
@@ -371,7 +380,7 @@ public class MyCharacterController : MonoBehaviour,IEnemy
     {
         if (collision.CompareTag("Enemy"))
         {
-            collision.GetComponent<IEnemy>().GetHit(parameter.atk);
+            collision.GetComponent<IEnemy>().GetHit(parameter.atk * parameter.atkRate[(int)parameter.attackType]);
             didHitPause = true;
             animator.speed = 0f;
             StartCoroutine(EndHitPause());

@@ -12,12 +12,6 @@ public enum SlimeStateType
 [Serializable]
 public class Parameter
 {
-    public float maxHealth;
-    public float health;
-    public float atk;
-    public float def;
-    public float moveSpeed;
-    public float chaseSpeed;
     public float idleTime;
     public float patrolLength;
     public float chaseLength;
@@ -28,7 +22,10 @@ public class Parameter
     public Transform attackPoint;
     public float attackArea;
     //public bool isHit = false;
-    public bool isDead = false;
+
+    public float patrolSpeed;
+    public float chaseSpeed;
+    
     public Animator animator;
     public RuntimeAnimatorController idleController;
     public RuntimeAnimatorController hurtController;
@@ -36,18 +33,22 @@ public class Parameter
     public RuntimeAnimatorController deathController;
 }
 
-public class SlimeFSM : MonoBehaviour,IEnemy
+public class SlimeFSM : EnemyFSM<SlimeStateType>, IEnemy
 {
+    //public GameObject parentManager;
+    //public GameObject body;
+    //public EnemyAttribute attribute;
     public Parameter parameter;
-    private IState curState;
-    private Dictionary<SlimeStateType, IState> states = new();
-    public Image bloodBar;
-    public GameObject bloodBarBackground;
+    //private IState curState;
+    //private Dictionary<SlimeStateType, IState> states = new();
+    //public Image bloodBar;
+    //public GameObject bloodBarBackground;
     //private Quaternion initialBloodBarRotation;
     // private Quaternion flipBloodBarRotation;
-    public Canvas canvas;
+    //public Canvas canvas;
     public GameObject SlimeObject;
-    private const float bloobBarLerpSpeed = 3f;
+    //private const float bloobBarLerpSpeed = 3f;
+    public GameObject bloodBar;
 
     private void Awake()
     {
@@ -66,7 +67,7 @@ public class SlimeFSM : MonoBehaviour,IEnemy
         TransitionState(SlimeStateType.Idle);
         parameter.animator = GetComponent<Animator>();
 
-        bloodBar.fillAmount = parameter.health / parameter.maxHealth;
+        //bloodBar.fillAmount = parameter.health / parameter.maxHealth;
         //initialBloodBarRotation = bloodBarBackground.transform.rotation;
         //flipBloodBarRotation = initialBloodBarRotation;
         //flipBloodBarRotation.x = -initialBloodBarRotation.x;
@@ -76,23 +77,30 @@ public class SlimeFSM : MonoBehaviour,IEnemy
     void Update()
     {
         curState.OnUpdate();
-        canvas.transform.position = transform.position;
+        //canvas.transform.position = transform.position;
     }
 
     public void GetHit(float damage)
     {
         //parameter.isHit = true;
-        damage /= (1 + parameter.def / 100);
-        parameter.health -= damage;
-        StartCoroutine(UpDateBloodBar());
-        TransitionState(SlimeStateType.Hurt);
-        if (parameter.health <= 0.0f && !parameter.isDead)
+        if (!attribute.isDead)
         {
-            parameter.isDead = true;
-            TransitionState(SlimeStateType.Death);
+            damage /= (1 + attribute.def / 100);
+            attribute.health -= damage;
+            //StartCoroutine(UpDateBloodBar());
+            if (attribute.health <= 0.0f)
+            {
+                attribute.isDead = true;
+                TransitionState(SlimeStateType.Death);
+            }
+            else
+            {
+                TransitionState(SlimeStateType.Hurt);
+            }
         }
     }
 
+    /*
     public void TransitionState(SlimeStateType type)
     {
         if (curState != null)
@@ -102,6 +110,7 @@ public class SlimeFSM : MonoBehaviour,IEnemy
         curState = states[type];
         curState.OnEnter();
     }
+    */
 
     public void FlipTo(Transform target)
     {
@@ -168,6 +177,7 @@ public class SlimeFSM : MonoBehaviour,IEnemy
 
     }
 
+    /*
     private IEnumerator UpDateBloodBar()
     {
         float timer = 1f;
@@ -178,4 +188,5 @@ public class SlimeFSM : MonoBehaviour,IEnemy
             yield return null;
         }
     }
+    */
 }
