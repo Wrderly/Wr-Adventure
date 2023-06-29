@@ -13,15 +13,15 @@ public enum SlimeStateType
 public class Parameter
 {
     public float idleTime;
-    public float patrolLength;
+    //public float patrolLength;
     public float chaseLength;
+    public Transform chasePoint;
     public Vector2 originPoint;
     public Transform target;
     public Vector3 targetPos;
     public LayerMask targetLayer;
     public Transform attackPoint;
     public float attackArea;
-    //public bool isHit = false;
 
     public float patrolSpeed;
     public float chaseSpeed;
@@ -35,20 +35,11 @@ public class Parameter
 
 public class SlimeFSM : EnemyFSM<SlimeStateType>, IEnemy
 {
-    //public GameObject parentManager;
-    //public GameObject body;
-    //public EnemyAttribute attribute;
     public Parameter parameter;
-    //private IState curState;
-    //private Dictionary<SlimeStateType, IState> states = new();
-    //public Image bloodBar;
-    //public GameObject bloodBarBackground;
-    //private Quaternion initialBloodBarRotation;
-    // private Quaternion flipBloodBarRotation;
-    //public Canvas canvas;
     public GameObject SlimeObject;
-    //private const float bloobBarLerpSpeed = 3f;
     public GameObject bloodBar;
+
+    public Transform[] patrolPoints;
 
     private void Awake()
     {
@@ -66,28 +57,19 @@ public class SlimeFSM : EnemyFSM<SlimeStateType>, IEnemy
 
         TransitionState(SlimeStateType.Idle);
         parameter.animator = GetComponent<Animator>();
-
-        //bloodBar.fillAmount = parameter.health / parameter.maxHealth;
-        //initialBloodBarRotation = bloodBarBackground.transform.rotation;
-        //flipBloodBarRotation = initialBloodBarRotation;
-        //flipBloodBarRotation.x = -initialBloodBarRotation.x;
-        //bloodBarBackground = GetComponent<GameObject>();
     }
 
     void Update()
     {
         curState.OnUpdate();
-        //canvas.transform.position = transform.position;
     }
 
     public void GetHit(float damage)
     {
-        //parameter.isHit = true;
         if (!attribute.isDead)
         {
             damage /= (1 + attribute.def / 100);
             attribute.health -= damage;
-            //StartCoroutine(UpDateBloodBar());
             if (attribute.health <= 0.0f)
             {
                 attribute.isDead = true;
@@ -100,32 +82,17 @@ public class SlimeFSM : EnemyFSM<SlimeStateType>, IEnemy
         }
     }
 
-    /*
-    public void TransitionState(SlimeStateType type)
-    {
-        if (curState != null)
-        {
-            curState.OnExit();
-        }
-        curState = states[type];
-        curState.OnEnter();
-    }
-    */
-
     public void FlipTo(Transform target)
     {
         if (target != null)
         {
             if (transform.position.x > target.position.x)
             {
-                transform.localScale = new Vector3(-1, 1, 1);
-                //bloodBarBackground.transform.rotation.
-                
+                transform.localScale = new Vector3(-1, 1, 1); 
             }
             else if(transform.position.x < target.position.x)
             {
                 transform.localScale = new Vector3(1, 1, 1);
-                //bloodBarBackground.transform.rotation = initialBloodBarRotation;
             }
         }
     }
@@ -137,12 +104,10 @@ public class SlimeFSM : EnemyFSM<SlimeStateType>, IEnemy
             if (transform.position.x > target.x)
             {
                 transform.localScale = new Vector3(-1, 1, 1);
-                //bloodBarBackground.transform.rotation = flipBloodBarRotation;
             }
             else if (transform.position.x < target.x)
             {
                 transform.localScale = new Vector3(1, 1, 1);
-                //bloodBarBackground.transform.rotation = initialBloodBarRotation;
             }
         }
     }
@@ -151,6 +116,7 @@ public class SlimeFSM : EnemyFSM<SlimeStateType>, IEnemy
     {
         if (collision.CompareTag("Player") && !collision.GetComponent<MyCharacterController>().parameter.isDead)
         {
+            //Debug.Log("Player Enter");
             parameter.target = collision.transform;
             Collider2D collider = parameter.target.GetComponent<Collider2D>();
             Bounds bounds = collider.bounds;
@@ -158,7 +124,8 @@ public class SlimeFSM : EnemyFSM<SlimeStateType>, IEnemy
         }
         else
         {
-            parameter.target = null;
+            //Debug.Log("No Enter");
+            //parameter.target = null;
         }
     }
 
@@ -174,19 +141,6 @@ public class SlimeFSM : EnemyFSM<SlimeStateType>, IEnemy
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireSphere(parameter.attackPoint.position, parameter.attackArea);
-
+        Gizmos.DrawWireSphere(parameter.chasePoint.position, parameter.chaseLength);
     }
-
-    /*
-    private IEnumerator UpDateBloodBar()
-    {
-        float timer = 1f;
-        while (timer > 0)
-        {
-            timer -= Time.deltaTime;
-            bloodBar.fillAmount = Mathf.Lerp(bloodBar.fillAmount, parameter.health / parameter.maxHealth, bloobBarLerpSpeed * Time.deltaTime);
-            yield return null;
-        }
-    }
-    */
 }

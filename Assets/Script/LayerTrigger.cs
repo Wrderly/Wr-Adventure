@@ -62,6 +62,11 @@ namespace Cainos.PixelArtTopDown_Basic
                     {
                         childSr.sortingLayerName = sortingLayer;
                     }
+                    Canvas childCa = child.gameObject.GetComponent<Canvas>();
+                    if (childCa != null)
+                    {
+                        childCa.sortingLayerName = sortingLayer;
+                    }
                 }
             }
         }

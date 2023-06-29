@@ -1,24 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.Physics2D;
+//using static UnityEngine.Physics2D;
 
 //站立状态
 public class SlimeIdleState : IState
 {
     private SlimeFSM fsm;
-    //private Parameter parameter;
     private float timer;
 
     public SlimeIdleState(SlimeFSM fsm)
     {
         this.fsm = fsm;
-        //this.parameter = manager.parameter;
     }
 
     public void OnEnter()
     {
-        Debug.Log("Slime Idle");
+        //Debug.Log("Slime Idle");
         fsm.parameter.animator.runtimeAnimatorController = fsm.parameter.idleController;
     }
     public void OnUpdate()
@@ -47,32 +45,32 @@ public class SlimeIdleState : IState
 public class SlimePatrolState : IState
 {
     private SlimeFSM fsm;
-    //private Parameter parameter;
     private int patrolPosition = 0;
-    private Vector2[] patrolDirection = { new Vector2(1, 1), new Vector2(-1, -1) };
+    //private Vector2[] patrolDirection = { new Vector2(1, 1), new Vector2(-1, -1) };
 
     public SlimePatrolState(SlimeFSM fsm)
     {
         this.fsm = fsm;
-        //this.parameter = manager.parameter;
     }
 
     public void OnEnter()
     {
-        Debug.Log("Slime Patrol");
+        //Debug.Log("Slime Patrol");
         fsm.parameter.animator.runtimeAnimatorController = fsm.parameter.idleController;
     }
     public void OnUpdate()
     {
         //设定巡逻目标点
-        Vector2 dstPoint = new Vector2(fsm.parameter.originPoint.x + fsm.parameter.patrolLength * patrolDirection[patrolPosition].x,
-            fsm.parameter.originPoint.y + fsm.parameter.patrolLength * patrolDirection[patrolPosition].y);
+        Vector2 dstPoint = new Vector2(fsm.patrolPoints[patrolPosition].position.x, fsm.patrolPoints[patrolPosition].position.y);
+        //Debug.Log("dstpoint " + dstPoint.x + " " + dstPoint.y);
         //转向
         fsm.FlipTo(dstPoint);
         //向巡逻点移动
         fsm.transform.position = Vector2.MoveTowards(fsm.transform.position,
             dstPoint, fsm.parameter.patrolSpeed * Time.deltaTime);
         //玩家进入追踪范围并且当前位置没有超出追踪上限
+        //Debug.Log("Patrol -> Chase Check " + fsm.transform.position + " " + fsm.parameter.originPoint);
+        //Debug.Log(Vector2.Distance(fsm.transform.position, fsm.parameter.originPoint));
         if (fsm.parameter.target != null && Vector2.Distance(fsm.transform.position, fsm.parameter.originPoint) < fsm.parameter.chaseLength)
         {
             //追踪状态
@@ -88,7 +86,7 @@ public class SlimePatrolState : IState
     public void OnExit()
     {
         patrolPosition++;
-        patrolPosition %= patrolDirection.Length;
+        patrolPosition %= fsm.patrolPoints.Length;
     }
 }
 
@@ -96,15 +94,13 @@ public class SlimePatrolState : IState
 public class SlimeChaseState : IState
 {
     private SlimeFSM fsm;
-    //private Parameter parameter;
-    ContactFilter2D filter;
+    //ContactFilter2D filter;
 
     public SlimeChaseState(SlimeFSM fsm)
     {
         this.fsm = fsm;
-        //this.parameter = manager.parameter;
-        filter = new ContactFilter2D();
-        filter.SetLayerMask(LayerMask.GetMask("Player"));
+        //filter = new ContactFilter2D();
+        //filter.SetLayerMask(LayerMask.GetMask("Player"));
     }
 
     public void OnEnter()
@@ -116,6 +112,7 @@ public class SlimeChaseState : IState
     {
         if (fsm.parameter.target != null && fsm.parameter.target.GetComponent<MyCharacterController>().parameter.isDead)
         {//防止攻击角色使其阵亡后，因角色无法自主退出碰撞盒导致怪物无法退出攻击状态
+            //Debug.Log("角色已阵亡");
             fsm.parameter.target = null;
         }
         //朝向目标
@@ -123,12 +120,14 @@ public class SlimeChaseState : IState
         //追踪区内有目标
         if (fsm.parameter.target != null)
         {//追踪
+            //Debug.Log("追踪");
             fsm.transform.position = Vector2.MoveTowards(fsm.transform.position,
-            fsm.parameter.target.position, fsm.parameter.chaseSpeed * Time.deltaTime);
+            fsm.parameter.targetPos, fsm.parameter.chaseSpeed * Time.deltaTime);
         }
         if (fsm.parameter.target == null || Vector2.Distance(fsm.transform.position, fsm.parameter.originPoint) > fsm.parameter.chaseLength)
         {//目标丢失或者超出追踪上限
             //站立
+            //Debug.Log("目标丢失或者超出追踪上限");
             fsm.TransitionState(SlimeStateType.Idle);
         }
         //目标进入攻击范围
@@ -139,7 +138,7 @@ public class SlimeChaseState : IState
     }
     public void OnExit()
     {
-
+        //Debug.Log("Exit Chase");
     }
 }
 
@@ -147,7 +146,6 @@ public class SlimeChaseState : IState
 public class SlimeAttackState : IState
 {
     private SlimeFSM fsm;
-    //private Parameter parameter;
     private Vector2 dstPoint;
     private float timer = 0.0f;
     private bool didAttack = false;
@@ -155,7 +153,6 @@ public class SlimeAttackState : IState
     public SlimeAttackState(SlimeFSM fsm)
     {
         this.fsm = fsm;
-        //this.parameter = manager.parameter;
     }
 
     public void OnEnter()
@@ -205,14 +202,12 @@ public class SlimeAttackState : IState
 public class SlimeHurtState : IState
 {
     private SlimeFSM fsm;
-    //private Parameter parameter;
     private Vector2 dstPoint;
     private float timer = 0.0f;
 
     public SlimeHurtState(SlimeFSM fsm)
     {
         this.fsm = fsm;
-        //this.parameter = manager.parameter;
     }
 
     public void OnEnter()
@@ -251,21 +246,18 @@ public class SlimeHurtState : IState
 public class SlimeDeathState : IState
 {
     private SlimeFSM fsm;
-    //private Parameter parameter;
     private float timer = 0.0f;
     private bool didDeathAnimator = false;
 
     public SlimeDeathState(SlimeFSM fsm)
     {
         this.fsm = fsm;
-        //this.parameter = manager.parameter;
     }
 
     public void OnEnter()
     {
         Debug.Log("Slime Death");
         fsm.parameter.animator.runtimeAnimatorController = fsm.parameter.deathController;
-        //manager.bloodBarBackground.SetActive(false);
         if (fsm.bloodBar != null)
         {
             fsm.bloodBar.SetActive(false);
